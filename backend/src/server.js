@@ -1,45 +1,45 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import { clerkMiddleware } from "@clerk/express";
-import { serve } from "inngest/express";
+import {clerkMiddleware} from '@clerk/express'
+import {serve} from "inngest/express";
 
-import { ENV } from "./config/env.js";
+import {functions, inngest} from "./config/inngest.js"
+
+import { ENV } from './config/env.js'
 import { connectDB } from "./config/db.js";
-import { inngest, functions } from "./config/inngest.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import adminRoutes from "./routes/admin.route.js"
 
 const app = express();
 
-app.use(express.json());
-app.use(clerkMiddleware());
+const __dirname = path.resolve();
 
-app.use("/api/inngest", serve({ client: inngest, functions }));
 
-app.get("/api/health", (_, res) => {
-  res.json({ status: "OK" });
+app.use(express.json())
+app.use(clerkMiddleware()); // add auth object under the req => req.auth
+
+app.use("/api/inngest", serve({client : inngest, functions : functions}))
+
+app.use("/api/admin",adminRoutes)
+
+app.get("/api/health", (req, res)=> {
+    res.status(200).json({message : "Sucess"});
 });
+ 
+// make our app ready for deployment
+if(ENV.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname, "../admin/dist")))
 
-if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../admin/dist")));
-
-  app.get("*", (_, res) => {
-    res.sendFile(
-      path.join(__dirname, "../admin/dist/index.html")
-    );
-  });
+    app.get("/{*any}",(req, res)=> {
+        res.sendFile(path.join(__dirname, "../admin", "dist", "index.html"))
+    });
 }
 
-const start = async () => {
-  await connectDB();
-
-  const PORT = ENV.PORT || 10000;
-  app.listen(PORT, () => {
-    console.log("Server running on", PORT);
-  });
+const startServer = async()=> {
+    await connectDB();
+    app.listen(ENV.PORT, ()=> {
+        console.log("Server is up and running");
+        
+    });
 };
-
-start();
+startServer();

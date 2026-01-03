@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 import { User } from "../models/user.model.js";
 
 export async function addAddress(req, res) {
@@ -16,11 +19,29 @@ export async function addAddress(req, res) {
 
     const user = req.user;
 
+<<<<<<< HEAD
     if(!fullName || !label || !streetAddress || !city || !state || !zipCode || !phoneNumber ){
         return res.status(400).json({error: "Missing required address fields"})
     }
 
     // if this is set a set as default , unset all othe default
+=======
+    if (
+      !fullName ||
+      !label ||
+      !streetAddress ||
+      !city ||
+      !state ||
+      !zipCode ||
+      !phoneNumber
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Missing required address fields" });
+    }
+
+    // if this is set as default, unset all other defaults
+>>>>>>> master
     if (isDefault) {
       user.addresses.forEach((addr) => {
         addr.isDefault = false;
@@ -46,7 +67,11 @@ export async function addAddress(req, res) {
       addresses: user.addresses,
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error("Error in addAddresses controller", error);
+=======
+    console.error("Error in addAddress controller", error);
+>>>>>>> master
     res.status(500).json({ error: "Internal server error" });
   }
 }
@@ -54,7 +79,11 @@ export async function addAddress(req, res) {
 export async function getAddresses(req, res) {
   try {
     const user = req.user;
+<<<<<<< HEAD
     res.status(200).json({ addAddress: user.addresses });
+=======
+    res.status(200).json({ addresses: user.addresses });
+>>>>>>> master
   } catch (error) {
     console.error("Error in getAddresses controller", error);
     res.status(500).json({ error: "Internal server error" });
@@ -63,7 +92,11 @@ export async function getAddresses(req, res) {
 
 export async function updateAddress(req, res) {
   try {
+<<<<<<< HEAD
     const user = req.user; // Auth middleware se verified user
+=======
+    const user = req.user;
+>>>>>>> master
     const {
       label,
       fullName,
@@ -74,6 +107,7 @@ export async function updateAddress(req, res) {
       phoneNumber,
       isDefault,
     } = req.body;
+<<<<<<< HEAD
     const { addressId } = req.params; // Route se addressId
 
     // 1️⃣ Find address by ID
@@ -82,14 +116,27 @@ export async function updateAddress(req, res) {
       return res.status(404).json({ error: "Addresses not found" });
     }
     // 2️⃣ Default logic
+=======
+
+    const { addressId } = req.params;
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+
+>>>>>>> master
     if (isDefault) {
       user.addresses.forEach((addr) => {
         addr.isDefault = false;
       });
     }
 
+<<<<<<< HEAD
     // 3️⃣ Update fields (tumhare style: field || oldValue)
 
+=======
+>>>>>>> master
     address.label = label || address.label;
     address.fullName = fullName || address.fullName;
     address.streetAddress = streetAddress || address.streetAddress;
@@ -97,6 +144,7 @@ export async function updateAddress(req, res) {
     address.state = state || address.state;
     address.zipCode = zipCode || address.zipCode;
     address.phoneNumber = phoneNumber || address.phoneNumber;
+<<<<<<< HEAD
     address.isDefault = isDefault != undefined ? isDefault : address.isDefault;
 
     // 4️⃣ Save the user document
@@ -106,11 +154,25 @@ export async function updateAddress(req, res) {
       .json({ message: "Address updated sucessfully", address: user.address });
   } catch (error) {
     console.error("Error in updateAddresses controller", error);
+=======
+    address.isDefault =
+      isDefault !== undefined ? isDefault : address.isDefault;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Address updated sucessfully",
+      address: address,
+    });
+  } catch (error) {
+    console.error("Error in updateAddress controller", error);
+>>>>>>> master
     res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function deleteAddress(req, res) {
+<<<<<<< HEAD
     try {
          const user = req.user;
          const {addressId} = req.params
@@ -186,4 +248,79 @@ export async function removeFromWishlist(req, res) {
          console.error("Error in getWishlist controller", error);
     res.status(500).json({ error: "Internal server error" });
     }
+=======
+  try {
+    const user = req.user;
+    const { addressId } = req.params;
+
+    user.addresses.pull(addressId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Address deleted sucessfully",
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    console.error("Error in deleteAddress controller", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function addToWishlist(req, res) {
+  try {
+    const { productId } = req.body;
+    const user = req.user;
+
+    if (user.wishlist.some((id) => id.toString() === productId)) {
+      return res
+        .status(400)
+        .json({ error: "Product already in wishlist" });
+    }
+
+    user.wishlist.push(productId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Product added to wishlist",
+      wishlist: user.wishlist,
+    });
+  } catch (error) {
+    console.error("Error in addToWishlist controller", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function getWishlist(req, res) {
+  try {
+    const user = await User.findById(req.user._id).populate("wishlist");
+    res.status(200).json({ wishlist: user.wishlist });
+  } catch (error) {
+    console.error("Error in getWishlist controller", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function removeFromWishlist(req, res) {
+  try {
+    const { productId } = req.params;
+    const user = req.user;
+
+    if (!user.wishlist.some((id) => id.toString() === productId)) {
+      return res
+        .status(400)
+        .json({ error: "Product is not even in wishlist" });
+    }
+
+    user.wishlist.pull(productId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Product removed from wishlist",
+      wishlist: user.wishlist,
+    });
+  } catch (error) {
+    console.error("Error in removeFromWishlist controller", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+>>>>>>> master
 }

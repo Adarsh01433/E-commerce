@@ -4,7 +4,7 @@ import { ENV } from "../config/env.js";
 
 export const protectRoute = [
     requireAuth(),
-    async(req,res, next)=> {
+    async(req, res, next)=> {
         try {
             const clerkId = req.auth().userId
             if(!clerkId) return res.status(401).json({message : "Unauthorized - invalid token"})

@@ -1,3 +1,4 @@
+
 import { User } from "../models/user.model.js";
 
 export async function addAddress(req, res) {
@@ -14,6 +15,10 @@ export async function addAddress(req, res) {
     } = req.body;
 
     const user = req.user;
+
+    if(!fullName || !label || !streetAddress || !city || !state || !zipCode || !phoneNumber ){
+        return res.status(400).json({error: "Missing required address fields"})
+    }
 
     // if this is set a set as default , unset all othe default
     if (isDefault) {
@@ -151,7 +156,8 @@ export async function addToWishlist(req, res) {
 export async function getWishlist(req, res) {
 
     try {
-        const user = req.user;
+        // we are using populate bc, wishlist is just an array of product ids
+        const user = await User.findById(req.user._id).populate("wishlist")
         res.status(200).json({wishlist : user.wishlist})
         
     } catch (error) {
